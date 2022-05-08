@@ -95,7 +95,7 @@ async function createMock (projectId, swaggerDocs) {
         newKeys = newKeys.filter(key => !/\[[1-9]\d*\]/.test(key))
         oldKeys = oldKeys.filter(key => !/\[[1-9]\d*\]/.test(key)) // [ 'data[0].item', 'data[1].item', 'data[2].item' ] => [ 'data[0]____item' ]
           .map(o => o.replace(/\|[^_\[]*(__)?/g, '$1')) // 'data|1-10.item' => 'data____item' 'data|1-10[0].item' => 'data[0]____item'
-        api.mode = _.xor(newKeys, oldKeys).length > 0 ? /* istanbul ignore next */ mode : api.mode
+        api.mode = _.xor(newKeys, oldKeys).length > 0 && newKeys.length > oldKeys.length ? /* istanbul ignore next */ mode : api.mode
       } catch (error) {
         errorURLs.push(`${api.method.toUpperCase()}-${api.url}`)
       }
