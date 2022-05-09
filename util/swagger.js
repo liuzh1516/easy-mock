@@ -81,7 +81,8 @@ async function createMock (projectId, swaggerDocs) {
           parameters,
           response_model: responseModel,
           description: desc,
-          project: projectId
+          project: projectId,
+          tags: JSON.stringify(operation.tags)
         })
         continue
       }
@@ -105,6 +106,7 @@ async function createMock (projectId, swaggerDocs) {
       api.description = desc
       api.parameters = parameters
       api.response_model = responseModel
+      api.tags = JSON.stringify(operation.tags)
 
       oldAPIs.push(api)
     }

@@ -14,6 +14,7 @@ const schema = new Schema({
   url: String,
   method: String,
   parameters: String,
+  tags: String,
   response_model: String,
   create_at: {
     type: Date,

@@ -34,12 +34,12 @@ module.exports = {
   },
   module: {
     rules: [
-      {
-        test: /\.(vue|js)$/,
-        enforce: 'pre',
-        loader: 'eslint-loader',
-        exclude: /node_modules/
-      },
+      // {
+      //   test: /\.(vue|js)$/,
+      //   enforce: 'pre',
+      //   loader: 'eslint-loader',
+      //   exclude: /node_modules/
+      // },
       {
         test: /\.vue$/,
         loader: 'vue-loader',
