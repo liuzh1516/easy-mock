@@ -1,11 +1,6 @@
 <template>
   <div class="em-proj-detail">
-    <em-header
-      icon="cube"
-      :title="project.name"
-      :description="page.description"
-      :nav="nav"
-      v-model="pageName">
+    <em-header icon="cube" :title="project.name" :description="page.description" :nav="nav" v-model="pageName">
     </em-header>
     <div v-shortkey="['tab']" @shortkey="handleKeyTab()"></div>
     <em-keyboard-short v-model="keyboards"></em-keyboard-short>
@@ -14,65 +9,74 @@
     </Back-top>
     <transition name="fade" mode="out-in">
       <project v-if="pageName === $t('p.detail.nav[1]')" key="a" :project-data="project"></project>
-      <div
-        class="em-container"
-        v-if="pageAnimated && pageName === $t('p.detail.nav[0]')"
-        key="b">
+      <div class="em-container" v-if="pageAnimated && pageName === $t('p.detail.nav[0]')" key="b">
         <div class="em-proj-detail__info">
           <Row>
             <Col span="19">
-              <em-spots :size="6"></em-spots>
-              {{project.description}}
-              <p class="tag">
-                <span>Base URL</span>
-                {{baseUrl}}
-              </p>
-              <p class="tag">
-                <span>Project ID</span>
-                {{project._id}}
-              </p>
+            <em-spots :size="6"></em-spots>
+            {{ project.description }}
+            <p class="tag">
+              <span>Base URL</span>
+              {{ baseUrl }}
+            </p>
+            <p class="tag">
+              <span>Project ID</span>
+              {{ project._id }}
+            </p>
             </Col>
             <Col span="5">
-              <div>
-                <img :src="group ? '/public/images/group-default.png' : project.user.head_img" />
-                <p class="author">{{group ? group.name : project.user.nick_name}}</p>
-              </div>
+            <div>
+              <img :src="group ? '/public/images/group-default.png' : project.user.head_img" />
+              <p class="author">{{ group ? group.name : project.user.nick_name }}</p>
+            </div>
             </Col>
           </Row>
         </div>
         <div class="em-proj-detail__switcher">
           <ul>
             <li @click="openEditor()" v-shortkey="['ctrl', 'n']" @shortkey="openEditor()">
-              <Icon type="plus-round"></Icon> {{$t('p.detail.create.action')}}
+              <Icon type="plus-round"></Icon> {{ $t('p.detail.create.action') }}
             </li>
             <li @click="handleWorkbench" v-shortkey="['ctrl', 'w']" @shortkey="handleWorkbench">
               <transition name="zoom" mode="out-in">
                 <Icon :type="project.extend.is_workbench ? 'android-star' : 'android-star-outline'"
                   :key="project.extend.is_workbench"></Icon>
               </transition>
-              {{$t('p.detail.workbench')}}
+              {{ $t('p.detail.workbench') }}
             </li>
             <li @click="updateBySwagger" v-shortkey="['ctrl', 's']" @shortkey="updateBySwagger">
-              <Icon type="loop"></Icon> {{$t('p.detail.syncSwagger.action')}}
+              <Icon type="loop"></Icon> {{ $t('p.detail.syncSwagger.action') }}
             </li>
-            <li @click="download"><Icon type="code-download"></Icon> {{$tc('p.detail.download', 1)}}</li>
+            <li @click="download">
+              <Icon type="code-download"></Icon> {{ $tc('p.detail.download', 1) }}
+            </li>
           </ul>
         </div>
         <div class="em-proj-detail__members" v-if="project.members.length">
           <em-spots :size="6"></em-spots>
-          <h2><Icon type="person-stalker"></Icon> {{$t('p.detail.member')}}</h2>
+          <h2>
+            <Icon type="person-stalker"></Icon> {{ $t('p.detail.member') }}
+          </h2>
           <Row :gutter="20">
             <Col span="2" v-for="(item, index) in project.members" :key="index">
-              <img :src="item.head_img" :title="item.nick_name"/>
+            <img :src="item.head_img" :title="item.nick_name" />
             </Col>
           </Row>
         </div>
-        <Table
-          border
-          :columns="columns"
-          :data="list"
-          @on-selection-change="selectionChange"
-          :highlight-row="true"></Table>
+        <Affix :offset-top="50" @on-change="affixChange">
+          <span class="demo-affix"></span>
+        </Affix>
+        <Collapse>
+          <Panel style="font-size:18px;" :name="groupIndex + ''" v-for="groupName, groupIndex in Object.keys(list)"
+            :key="groupIndex">
+            {{ groupName }}<span>（{{ list[groupName].length }}）</span>
+            <p slot="content">
+            <Table border :columns="columns" :data="list[groupName]" @on-selection-change="selectionChange"
+              :highlight-row="true">
+            </Table>
+            </p>
+          </Panel>
+        </Collapse>
       </div>
     </transition>
   </div>
@@ -92,9 +96,10 @@ import MockExpand from './mock-expand'
 
 export default {
   name: 'projectDetail',
-  data () {
+  data() {
     return {
       pageName: this.$t('p.detail.nav[0]'),
+      showMenu: false,
       selection: [],
       keywords: '',
       nav: [
@@ -144,7 +149,7 @@ export default {
             { label: 'delete', value: 'delete' },
             { label: 'patch', value: 'patch' }
           ],
-          filterMethod (value, row) {
+          filterMethod(value, row) {
             return row.method.indexOf(value) > -1
           },
           render: (h, params) => {
@@ -160,8 +165,8 @@ export default {
             </tag>
           }
         },
-        { title: 'URL', width: 420, ellipsis: true, sortable: true, key: 'url' },
-        { title: this.$t('p.detail.columns[0]'), ellipsis: true, key: 'description' },
+        { title: 'URL', width: 260, ellipsis: true, sortable: true, key: 'url' },
+        { title: this.$t('p.detail.columns[0]'), width: 260, ellipsis: true, key: 'description' },
         {
           title: this.$t('p.detail.columns[1]'),
           key: 'action',
@@ -190,50 +195,77 @@ export default {
       ]
     }
   },
-  asyncData ({ store, route }) {
+  asyncData({ store, route }) {
     store.commit('mock/INIT_REQUEST')
     return store.dispatch('mock/FETCH', route)
   },
-  mounted () {
+  mounted() {
     this.$on('query', debounce((keywords) => {
       this.keywords = keywords
     }, 500))
   },
   computed: {
-    project () {
+    project() {
       return this.$store.state.mock.project
     },
-    list () {
+    list() {
       const list = this.$store.state.mock.list
       const reg = this.keywords && new RegExp(this.keywords, 'i')
-      return reg
+      let tempList = reg
         ? list.filter(item => (
           reg.test(item.name) || reg.test(item.url) || reg.test(item.method)
         ))
         : list
+      console.log(tempList)
+
+      tempList = tempList.map(item => {
+        if (typeof item.tags === 'string') {
+          item.tags = JSON.parse(item.tags)
+        }
+        return item
+      })
+
+      const distinctedTagList = Array.from(new Set(tempList.flatMap(item => item.tags)))
+      console.log(distinctedTagList)
+
+      const finalList = {}
+
+      distinctedTagList.forEach(tagItem => {
+        finalList[tagItem] = []
+        tempList.forEach(apiItem => {
+          if (apiItem.tags.indexOf(tagItem) != -1) {
+            finalList[tagItem].push(apiItem)
+          }
+        })
+      })
+      console.log(finalList)
+      return finalList
     },
-    page () {
+    page() {
       return {
         description: this.project.user
           ? this.$t('p.detail.header.description[0]')
           : this.$t('p.detail.header.description[1]')
       }
     },
-    baseUrl () {
+    baseUrl() {
       const baseUrl = location.origin + '/mock/' + this.project._id
       return this.project.url === '/' ? baseUrl : baseUrl + this.project.url
     },
-    group () {
+    group() {
       return this.project.group
     }
   },
   methods: {
-    handleKeyTab () {
+    affixChange(status){
+      this.showMenu = status
+    },
+    handleKeyTab() {
       this.pageName = this.pageName === this.$t('p.detail.nav[1]')
         ? this.$t('p.detail.nav[0]')
         : this.$t('p.detail.nav[1]')
     },
-    clip (mockUrl) {
+    clip(mockUrl) {
       const clipboard = new Clipboard('.copy-url', {
         text: () => {
           return this.baseUrl + mockUrl
@@ -245,13 +277,13 @@ export default {
         this.$Message.success(this.$t('p.detail.copySuccess'))
       })
     },
-    preview (mock) {
+    preview(mock) {
       window.open(this.baseUrl + mock.url + '#!method=' + mock.method)
     },
-    selectionChange (selection) {
+    selectionChange(selection) {
       this.selection = selection
     },
-    download (mockId) {
+    download(mockId) {
       if (typeof mockId === 'string') {
         const ids = this.selection.length
           ? this.selection.map(item => item._id)
@@ -261,7 +293,7 @@ export default {
         api.mock.export(this.project._id)
       }
     },
-    updateBySwagger () {
+    updateBySwagger() {
       if (!this.project.swagger_url) {
         this.$Message.warning(this.$t('p.detail.syncSwagger.warning'))
         return
@@ -270,6 +302,7 @@ export default {
         title: this.$t('confirm.title'),
         content: this.$t('p.detail.syncSwagger.confirm'),
         onOk: () => {
+          console.log(this.project._id)
           api.project.updateSwagger({
             data: { id: this.project._id }
           }).then((res) => {
@@ -288,7 +321,7 @@ export default {
               } else {
                 this.$Message.success(this.$t('p.detail.syncSwagger.success'))
               }
-              this.$store.commit('mock/SET_REQUEST_PARAMS', {pageIndex: 1})
+              this.$store.commit('mock/SET_REQUEST_PARAMS', { pageIndex: 1 })
               this.$store.dispatch('mock/FETCH', this.$route)
             }
             return res
@@ -296,7 +329,7 @@ export default {
         }
       })
     },
-    remove (mockId) {
+    remove(mockId) {
       const ids = this.selection.length
         ? this.selection.map(item => item._id)
         : [mockId]
@@ -316,10 +349,10 @@ export default {
         }
       })
     },
-    handleWorkbench () {
+    handleWorkbench() {
       this.$store.dispatch('project/WORKBENCH', this.project.extend)
     },
-    clone (mock) {
+    clone(mock) {
       this.$store.dispatch('mock/CREATE', {
         route: this.$route,
         ...mock,
@@ -330,9 +363,9 @@ export default {
         }
       })
     },
-    openEditor (mock) {
+    openEditor(mock) {
       if (mock) {
-        this.$store.commit('mock/SET_EDITOR_DATA', {mock, baseUrl: this.baseUrl})
+        this.$store.commit('mock/SET_EDITOR_DATA', { mock, baseUrl: this.baseUrl })
         this.$router.push(`/editor/${this.project._id}/${mock._id}`)
       } else {
         this.$router.push(`/editor/${this.project._id}`)
@@ -344,3 +377,13 @@ export default {
   }
 }
 </script>
+<style>
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  padding: 5px;
+  background-color: #ffffff;
+  border: 2px solid #ffffff;
+}
+</style>
